@@ -17,23 +17,18 @@ spring:
       mode: never
 
   kafka:
-    bootstrap-servers: ${KAFKA_HOST} # 환경 변수 KAFKA_HOST를 사용
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer # JsonSerializer 사용
-      properties:
-        spring.json.add.type.headers: false
-      retries: 3
+    # Kafka 서버 주소 (EC2에 카프카를 설치했기 때문에 EC2 주소를 입력해야 한다.)
+    bootstrap-servers: localhost:9092
     consumer:
-      group-id: payment-group # 결제 서버의 컨슈머 그룹 ID
+      # 메시지의 key 역직렬화 방식 : Kafka에서 받아온 메시지를 String으로 변환
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      enable-auto-commit: true
-      auto-commit-interval: 500
-      auto-offset-reset: latest
-      properties:
-        spring.json.trusted.packages: "*" # 결제 이벤트 모델만 신뢰해도 됨
+      # 메시지의 value 역직렬화 방식 : Kafka에서 받아온 메시지를 String으로 변환
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
-  jackson:
-    serialization:
-      write-dates-as-timestamps: false
+      # 컨슈머 그룹이 미리 안 만들어져있는 경우에, 컨슈머 그룹을 직접 생성해서 메시지를 처음부터 읽음.
+      # 만약 컨슈머 그룹이 이미 만들어져있다면, 해당 컨슈머 그룹이 읽었던 메시지부터 읽음.
+
+      # 이 옵션을 주지 않으면 컨슈머 그룹을 직접 생성해서 메시지를 읽을 때,
+      # 기존에 쌓여있던 메시지를 읽지 않고 컨슈머 그룹이 생성된 이후에 들어온 메시지부터 읽어버린다.
+      # 그럼 컨슈머 그룹이 생성되기 전에 쌓여있던 메시지들이 처리되지 않고 누락돼버린다.
+      auto-offset-reset: earliest
