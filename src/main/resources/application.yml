@@ -10,6 +10,17 @@ spring:
     hikari:
       maximum-pool-size: 32
 
+  jpa:
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+
   kafka:
     # 연결시킬 Kafka 서버 주소
     bootstrap-servers:
