@@ -2,23 +2,20 @@ server:
   port: 8082
 
 spring:
-  application:
-    name: payment-service
-
-  task:
-    execution:
-      pool:
-        core-size: 10
-        max-size: 50
-        queue-capacity: 100
-
-  sql:
-    init:
-      mode: never
+  datasource:
+    url: jdbc:mysql://${RDS_ENDPOINT:localhost}:3306/portfolio?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true&useSSL=false&rewriteBatchedStatements=true
+    username: portfolio_user
+    password: ${RDS_PASSWORD:portfolio1234}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 32
 
   kafka:
-    # Kafka 서버 주소 (EC2에 카프카를 설치했기 때문에 EC2 주소를 입력해야 한다.)
-    bootstrap-servers: localhost:9092
+    # 연결시킬 Kafka 서버 주소
+    bootstrap-servers:
+      - localhost:9092
+      - localhost:19092
+      - localhost:29092
     consumer:
       # 메시지의 key 역직렬화 방식 : Kafka에서 받아온 메시지를 String으로 변환
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -32,3 +29,12 @@ spring:
       # 기존에 쌓여있던 메시지를 읽지 않고 컨슈머 그룹이 생성된 이후에 들어온 메시지부터 읽어버린다.
       # 그럼 컨슈머 그룹이 생성되기 전에 쌓여있던 메시지들이 처리되지 않고 누락돼버린다.
       auto-offset-reset: earliest
+
+  mail:
+    host: localhost
+    port: 1025
+    username:
+    password:
+    properties:
+      mail.smtp.auth: false
+      mail.smtp.starttls.enable: false
