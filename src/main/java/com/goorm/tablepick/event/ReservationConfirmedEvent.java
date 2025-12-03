@@ -16,12 +16,14 @@ public class ReservationConfirmedEvent {
     private LocalDateTime confirmedAt;
     private int partySize;
 
+    private static final ObjectMapper objectMapper = new ObjectMapper()
+            .findAndRegisterModules(); // 또는 .registerModule(new JavaTimeModule())
+
     public static ReservationConfirmedEvent fromJson(String json) {
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
             return objectMapper.readValue(json, ReservationConfirmedEvent.class);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("JSON 파싱 실패");
+            throw new RuntimeException("JSON 파싱 실패", e);
         }
     }
 }

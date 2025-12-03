@@ -32,34 +32,20 @@ public class ReservationConfirmedEventConsumer {
             backoff = @Backoff(delay = 1000, multiplier = 2),
             dltTopicSuffix = ".dlt"
     )
-    private void consume(String message) {
+    private void consume(String message) throws InterruptedException{
         ReservationConfirmedEvent reservationConfirmedEvent = ReservationConfirmedEvent.fromJson(message);
 
-        try {
-            emailSender.sendReservationEmail(reservationConfirmedEvent);
-            log.info("예약 완료 메일 발송");
-            emailLogRepository.save(
-                    EmailLog.builder()
-                            .reservationId(reservationConfirmedEvent.getReservationId())
-                            .email(reservationConfirmedEvent.getEmail())
-                            .subject("[TablePick] 예약이 완료되었습니다.")
-                            .status(MailStatus.SUCCESS)
-                            .sentAt(LocalDateTime.now())
-                            .build()
-            );
-        } catch (Exception e) {
-            log.error("예약 완료 메일 발송 중 예외 발생");
-
-            emailLogRepository.save(
-                    EmailLog.builder()
+        emailSender.sendReservationEmail(reservationConfirmedEvent);
+        log.info("예약 완료 메일 발송");
+        emailLogRepository.save(
+                EmailLog.builder()
                         .reservationId(reservationConfirmedEvent.getReservationId())
                         .email(reservationConfirmedEvent.getEmail())
                         .subject("[TablePick] 예약이 완료되었습니다.")
-                        .status(MailStatus.FAILURE)
-                        .errorMessage(e.getMessage())
+                        .status(MailStatus.SUCCESS)
                         .sentAt(LocalDateTime.now())
                         .build()
-            );
-        }
+        );
+
     }
 }
