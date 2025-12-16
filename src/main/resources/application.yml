@@ -28,7 +28,7 @@ spring:
 
   kafka:
     # 연결시킬 Kafka 서버 주소
-    bootstrap-servers: ${KAFKA_HOST:localhost:9092,localhost:19092,localhost:29092}
+    bootstrap-servers: ${KAFKA_PRIVATE_IP:localhost:9092,localhost:19092,localhost:29092}
     consumer:
       # 메시지의 key 역직렬화 방식 : Kafka에서 받아온 메시지를 String으로 변환
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -44,7 +44,7 @@ spring:
       auto-offset-reset: earliest
 
   mail:
-    host: ${MAIL_HOST:localhost}
+    host: localhost
     port: 1025
     username:
     password:

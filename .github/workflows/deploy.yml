@@ -28,7 +28,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
@@ -59,7 +59,7 @@ jobs:
                 -e SPRING_PROFILES_ACTIVE=prod \\
                 -e SPRING_DATASOURCE_URL=jdbc:mysql://${{ secrets.RDS_ENDPOINT }}/portfolio?useSSL=false\\&serverTimezone=Asia/Seoul\\&allowPublicKeyRetrieval=true \\
                 -e SPRING_DATASOURCE_PASSWORD=${{ secrets.RDS_PASSWORD }} \\
-                -e SPRING_KAFKA_BOOTSTRAP_SERVERS=${{ secrets.KAFKA_HOST }}:9092 \\
+                -e SPRING_KAFKA_BOOTSTRAP_SERVERS=${{ secrets.KAFKA_PRIAVTE_IP }}:9092 \\
                 -e SPRING_MAIL_HOST=localhost \\
                 $ECR_REGISTRY/$ECR_REPOSITORY:mail-$IMAGE_TAG"
             ]'
