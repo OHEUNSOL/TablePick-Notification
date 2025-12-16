@@ -44,6 +44,12 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-mail'
 
     implementation "io.netty:netty-resolver-dns-native-macos:4.1.107.Final:osx-aarch_64" //맥북
+
+    // micrometer
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // Monitoring
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 }
 
 tasks.named('test') {

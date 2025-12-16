@@ -5,6 +5,7 @@ import com.goorm.tablepick.email.entity.MailStatus;
 import com.goorm.tablepick.email.repository.EmailLogRepository;
 import com.goorm.tablepick.event.ReservationConfirmedEvent;
 import com.goorm.tablepick.infra.EmailSender;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -21,6 +22,7 @@ public class ReservationConfirmedEventConsumer {
 
     private final EmailSender emailSender;
     private final EmailLogRepository emailLogRepository;
+    private final MeterRegistry meterRegistry;
 
     @KafkaListener(
             topics = "reservation.confirmed",
@@ -46,6 +48,8 @@ public class ReservationConfirmedEventConsumer {
                         .sentAt(LocalDateTime.now())
                         .build()
         );
+
+        meterRegistry.counter("mail.sent.success", "type", "kafka").increment();
 
     }
 }
