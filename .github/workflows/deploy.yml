@@ -1,0 +1,65 @@
+name: Deploy Mail Server (8081)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REPOSITORY: backend-portfolio
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'microsoft'
+
+      - name: Build with Gradle
+        run: ./gradlew clean build -x test
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_ID }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & Push Mail Image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:mail-$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:mail-$IMAGE_TAG
+
+      - name: Deploy to Mail EC2
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          aws ssm send-command \
+            --instance-ids ${{ secrets.EC2_MAIL_INSTANCE_ID }} \
+            --document-name "AWS-RunShellScript" \
+            --parameters 'commands=[
+              "docker pull $ECR_REGISTRY/$ECR_REPOSITORY:mail-$IMAGE_TAG",
+              "docker stop portfolio-mail || true",
+              "docker rm portfolio-mail || true",
+              "docker run -d --name portfolio-mail -p 8081:8081 --restart unless-stopped \\
+                -e SPRING_PROFILES_ACTIVE=prod \\
+                -e SPRING_DATASOURCE_URL=jdbc:mysql://${{ secrets.RDS_ENDPOINT }}/portfolio?useSSL=false\\&serverTimezone=Asia/Seoul\\&allowPublicKeyRetrieval=true \\
+                -e SPRING_DATASOURCE_PASSWORD=${{ secrets.RDS_PASSWORD }} \\
+                -e SPRING_KAFKA_BOOTSTRAP_SERVERS=${{ secrets.KAFKA_HOST }}:9092 \\
+                -e SPRING_MAIL_HOST=localhost \\
+                $ECR_REGISTRY/$ECR_REPOSITORY:mail-$IMAGE_TAG"
+            ]'
