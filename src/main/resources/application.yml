@@ -13,7 +13,7 @@ spring:
     password: ${RDS_PASSWORD:portfolio1234}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
-      maximum-pool-size: 32
+      maximum-pool-size: 20
 
   jpa:
     defer-datasource-initialization: true
