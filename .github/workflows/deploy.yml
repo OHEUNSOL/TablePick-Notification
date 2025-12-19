@@ -38,28 +38,22 @@ jobs:
       - name: Build & Push Mail Image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:mail-$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:mail-$IMAGE_TAG
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:mail-${{ github.sha }} .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:mail-${{ github.sha }}
 
-      - name: Deploy to Mail EC2
+      - name: Deploy to Main EC2
         env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
           aws ssm send-command \
             --instance-ids ${{ secrets.EC2_MAIL_INSTANCE_ID }} \
             --document-name "AWS-RunShellScript" \
-            --parameters 'commands=[
-              "docker pull $ECR_REGISTRY/$ECR_REPOSITORY:mail-$IMAGE_TAG",
-              "docker stop portfolio-mail || true",
-              "docker rm portfolio-mail || true",
-              "docker run -d --name portfolio-mail -p 8081:8081 --restart unless-stopped \
-                -e SPRING_PROFILES_ACTIVE=prod \
-                -e SPRING_DATASOURCE_URL=jdbc:mysql://${{ secrets.RDS_ENDPOINT }}/portfolio?useSSL=false\&serverTimezone=Asia/Seoul\&allowPublicKeyRetrieval=true \
-                -e SPRING_DATASOURCE_PASSWORD=${{ secrets.RDS_PASSWORD }} \
-                -e SPRING_KAFKA_BOOTSTRAP_SERVERS=${{ secrets.KAFKA_PRIAVTE_IP }}:9092 \
-                -e SPRING_MAIL_HOST=localhost \
-                $ECR_REGISTRY/$ECR_REPOSITORY:mail-$IMAGE_TAG"
-            ]'
+            --parameters '{
+              "commands": [
+                "docker stop portfolio-mail || true",
+                "docker rm portfolio-mail || true",
+                "aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}",
+                "docker run -d --name portfolio-mail -p 8081:8081 -e JAVA_OPTS=-Xmx256m -e SPRING_PROFILES_ACTIVE=prod -e SPRING_DATASOURCE_URL=jdbc:mysql://${{ secrets.RDS_ENDPOINT }}/portfolio?useSSL=false\\&serverTimezone=Asia/Seoul\\&allowPublicKeyRetrieval=true -e SPRING_DATASOURCE_PASSWORD=${{ secrets.RDS_PASSWORD }} -e SPRING_KAFKA_BOOTSTRAP_SERVERS=${{ secrets.KAFKA_PRIVATE_IP }}:9092 -e SPRING_MAIL_HOST=localhost '$REGISTRY'/'$ECR_REPOSITORY':mail-'$GITHUB_SHA'"
+              ]
+            }'
