@@ -44,7 +44,7 @@ spring:
       auto-offset-reset: earliest
 
   mail:
-    host: localhost
+    host: ${EC2_PUBLIC_IP:localhost}
     port: 1025
     username:
     password:
