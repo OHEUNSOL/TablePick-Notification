@@ -44,7 +44,7 @@ spring:
       auto-offset-reset: earliest
 
   mail:
-    host: localhost
+    host: mailhog
     port: 1025
     username:
     password:
