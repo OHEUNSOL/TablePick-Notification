@@ -27,7 +27,7 @@ public class ReservationConfirmedEventConsumer {
     @KafkaListener(
             topics = "reservation.confirmed",
             groupId = "email-service",
-            concurrency = "3"
+            concurrency = "2"
     )
     @RetryableTopic(
             attempts = "5",
